@@ -92,6 +92,14 @@ So we aren't isolated at all
 And this is definitely looks like a linux box
 I'm getting out, and just using this a bit more
 
+Get a shell using k9s
+cd /proc
+cd {somePid}
+cd ns
+ls -la
+
+Show that the two processes do in fact have the same namespaces in /proc
+
 lsns
   
 
