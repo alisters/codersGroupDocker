@@ -4,20 +4,31 @@
 A walkthrough of containers, images, docker, kubernetes and related commands with a focus on enough understanding what the commands we run do under the hood
 
 We are going to build a server inside a docker container. 
-It's going to be a bit inception like.... we are going to use docker to build our server AND run our server, then figure out what might 
-
-  
+It's going to be a bit inception like.... we are going to use docker to build our server, run some tools AND run our server, then kind of from the "inside out" we will put together clues that help us understand and cement what containers are and how dockers tools create them. 
 
 # 0) Prep
 
+We will use a kotlin spring mvc rest server, run by spring boot and generated using 
 https://start.spring.io/
 
+This server will be installed and run in a distroless base image  
 https://github.com/GoogleContainerTools/distroless
 
+Start by cloning this repo
 ``` 
-> git clone https://gitlab.gbcloud.com.au/dt-apps-poc-build/alister.shipman/tech-conference-1.git
+> git clone https://github.com/alisters/codersGroupDocker.git
+```
+
+Now pull the image we are going to use to build this - apologies for the download sizes
+```
 > docker pull maven:3.8.3-openjdk-17
+```
+Pick and create a temp directory so you can cache the libraries locally
+```
 > docker run -v ${PWD}:/opt/maven  -v c:\users\ashipman\temp\.m2:/root/.m2 -w /opt/maven maven:3.8.3-openjdk-17 -- mvn install
+```
+
+```
 > docker build -t craft-beer .
 > docker run -t craft-beer --name craft-beer1
 Error: Unable to access jarfile craft-beer1
