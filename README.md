@@ -28,6 +28,7 @@ Pick and create a temp directory so you can cache the libraries locally
 > docker run -v ${PWD}:/opt/maven  -v c:\users\ashipman\temp\.m2:/root/.m2 -w /opt/maven maven:3.8.3-openjdk-17 -- mvn install
 ```
 
+# 2) Test Drive
 ```
 > docker build -t craft-beer .
 > docker run -t craft-beer --name craft-beer1
@@ -48,7 +49,7 @@ Lets browse to this server !
 
 Hmm, nothing.... so lets start with understanding what we just did
 
-# 1) Images
+# 2) Images
 
 Somethings going on here we ran java ?
 
@@ -75,16 +76,17 @@ ok so we've found a shell
 > docker run --name craft-beer-1 -it --entrypoint /busybox/sh craft-beer
 ```
 
-ok so we can override the entry point, lets see what we can see
+ok so we can override the entry point, so the cmd in the manifest is not what makes the container.....
+ 
+
+# 3) Namespaces and Shell Commands
 ```
 $ ps
 ```
 
 We are running as root, does that matter ?
 We only see a couple of processes ? What does that mean ?
-  
 
-# 2) Namespaces and Shell Commands
 
 Lets have a look at some switches e.g --pid=""
 Maybe we aren't that limited
@@ -129,7 +131,7 @@ And maybe i know a bit more now about how that port inside the container made it
 to my local host
  
 
-# 3) Docker Container runtimes
+# 4) Container runtimes and Docker
 
 ok - so i know what a "container" is now. So what how is that related to docker ?
 
@@ -146,7 +148,7 @@ gcloud auth configure-docker
 
 https://docs.docker.com/registry/spec/api/#pulling-an-image
 
-# 4) Container Monitoring and pods
+# 5) Container Monitoring, pods and kubernetes
 
 
 ```
@@ -155,8 +157,6 @@ https://docs.docker.com/registry/spec/api/#pulling-an-image
 k8s.gcr.io/pause:3.7
 
 https://learnk8s.io/kubernetes-network-packets#the-pause-container-creates-the-network-namespace-in-the-pod
-
-# 5) Kubernetes architecture and Container orchestration
 
 ```
 cd ~/.kube
@@ -168,16 +168,24 @@ cd ~/.kube
 ```
 
 Hey now we see that we are just hitting an http api
-Lets load that in the browser
 
 create a namespace
 bootstrap and image pull secrets
 metadata, spec, labels, annotations
-
-# 6 ) Extras
-
 Declaritive and imperative way of handling resources
+
+Create a docker secret
 service accounts, namespaces, secrets, .docker secrets to pull images
+
+
+# 6 ) Back to the rock....
+Lets have a look at dockerfiles with fresh eyes
+Directives - describing the container to create, which docker translates to an OCI spec so its runtime can run it
+Multi-stage build
+
+
+# 7 ) Extras
+
 
 kubectl get resources
 
