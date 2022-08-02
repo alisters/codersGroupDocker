@@ -16,35 +16,68 @@ https://github.com/GoogleContainerTools/distroless
 
 Start by cloning this repo
 ``` 
-> git clone https://github.com/alisters/codersGroupDocker.git
+git clone https://github.com/alisters/codersGroupDocker.git
 ```
 
 Now pull the image we are going to use to build this - apologies for the download sizes
 ```
-> docker pull maven:3.8.3-openjdk-17
+docker pull maven:3.8.3-openjdk-17
 ```
 Pick and create a temp directory so you can cache the libraries locally
 ```
-> docker run -v ${PWD}:/opt/maven  -v c:\users\ashipman\temp\.m2:/root/.m2 -w /opt/maven maven:3.8.3-openjdk-17 -- mvn install
+docker run -v ${PWD}:/opt/maven  -v c:\users\ashipman\temp\.m2:/root/.m2 -w /opt/maven maven:3.8.3-openjdk-17 -- mvn install
 ```
+```
+docker pull wagoodman/dive
+```
+
 
 # 2) Test Drive
 ```
-> docker build -t craft-beer .
-> docker run -t craft-beer --name craft-beer1
-Error: Unable to access jarfile craft-beer1
-> docker run --tty --rm --name craft-beer1  craft-beer
-> docker ps
-> docker stop craft-beer1
+docker --help
 ```
+```
+docker build -f .\Dockerfile.1 -t craft-beer1 .
+```
+```
+docker run --tty --rm --name craft-beer1  craft-beer1
+```
+Error: -jar requires jar file specification
+```
+docker inspect craft-beer1
+```
+Note the entrypoint
+```
+docker build -f .\Dockerfile.2 -t craft-beer2 .
+```
+```
+docker run --tty --rm --name craft-beer2  craft-beer2
+```
+
+And we are stuck, so in a new terminal
+```
+docker ps
+```
+```
+docker stop craft-beer2
+```
+```
+docker inspect craft-beer2
+```
+```
+docker run --tty --rm --interactive --name craft-beer2  craft-beer2
+```
+
 
 Sure, you can run these commands - but in my experience you'll quickly run into a problem with docker and want to know what's going on. 
 
 Lets browse to this server !
 ``` 
-> start http:\\localhost:8080 
+start http:\\localhost:8080 
+```
 # Nothing
-> netstat -a | sls LISTENING | sls 8080
+```
+netstat -a | sls LISTENING | sls 8080
 ```
 
 Hmm, nothing.... so lets start with understanding what we just did
@@ -54,11 +87,17 @@ Hmm, nothing.... so lets start with understanding what we just did
 Somethings going on here we ran java ?
 
 ```
-> docker --help
-> docker inspect craft-beer
-> docker events
+docker --help
 ```
-
+```
+docker events
+```
+```
+docker run --help
+```
+```
+docker run --help | sls "namespace|cgroup" -Context 0,1
+```
 Note the entry point
 
 How can we figure out what else is in the container ?
@@ -66,14 +105,12 @@ How can we figure out what else is in the container ?
 https://github.com/wagoodman/dive
 
 ```
-> docker pull wagoodman/dive
-> dive craft-beer
-> docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_API_VERSION=1.37 wagoodman/dive:latest craft-beer
+docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_API_VERSION=1.37 wagoodman/dive:latest craft-beer2
 ```
 
 ok so we've found a shell
 ```
-> docker run --name craft-beer-1 -it --entrypoint /busybox/sh craft-beer
+docker run --name craft-beer-1 -it --entrypoint /busybox/sh craft-beer1
 ```
 
 ok so we can override the entry point, so the cmd in the manifest is not what makes the container.....
@@ -90,26 +127,43 @@ We only see a couple of processes ? What does that mean ?
 
 Lets have a look at some switches e.g --pid=""
 Maybe we aren't that limited
+```
+start https://docs.docker.com/engine/reference/run/
+```
 
 ```
-> docker run --name craft-beer-2 --pid container:craft-beer-1 -it --entrypoint /busybox/sh craft-beer
+docker run --name craft-beer-1b --pid container:craft-beer-1 -it --entrypoint /busybox/sh craft-beer1
 ```
+
+```
+docker run --name craft-beer-1c -it --entrypoint /busybox/sh craft-beer3
+```
+*docker: Error response from daemon: unable to find user beer: no matching entries in passwd file.*
+
 Hmm, we don't look like we are isolated at all !
 So, where are these running on my machine ?  
 
 ```
-> docker run --privileged --rm --pid=host -ti ubuntu
-> nsenter --target 1 --mount sh
+docker run --privileged --rm --pid=host -ti ubuntu
+nsenter --target 1 --mount sh
 ```
 So we aren't isolated at all
 And this is definitely looks like a linux box
 I'm getting out, and just using this a bit more
 
 Get a shell using k9s
+```
 cd /proc
+```
+```
 cd {somePid}
+```
+```
 cd ns
+```
+```
 ls -la
+```
 
 Show that the two processes do in fact have the same namespaces in /proc
 
@@ -117,8 +171,10 @@ lsns
   
 
 ```
-> docker run -it -p 8080:8080/tcp craft-beer
-> docker run --name craft-beer2 -it --rm -p 8080:8080/tcp -v ${PWD}\data:/data craft-beer
+docker run -it -p 8080:8080/tcp craft-beer
+```
+```
+docker run --name craft-beer2 -it --rm -p 8080:8080/tcp -v ${PWD}\data:/data craft-beer
 ```
 Confirm the mounted data is there, exec commands, to show that a container is something we still have access to, and is not just it's running process - we can run other processes inside it
 ```
@@ -139,10 +195,15 @@ https://www.ianlewis.org/en/container-runtimes-part-1-introduction-container-r
 
 
 ```
-> pushd
 cd ~/.docker
+```
+```
 cat .\config.json
+```
+```
 Get-Command docker-credential-gcloud.cmd
+```
+```
 gcloud auth configure-docker
 ```
 
@@ -152,7 +213,7 @@ https://docs.docker.com/registry/spec/api/#pulling-an-image
 
 
 ```
-> docker ps
+docker ps
 ```
 k8s.gcr.io/pause:3.7
 
@@ -160,11 +221,21 @@ https://learnk8s.io/kubernetes-network-packets#the-pause-container-creates-the-n
 
 ```
 cd ~/.kube
-> gcloud config config-helper --format=json
-> kubectx
-> kubectl options
-> kubectl get pods -n dev -v=7
-> kubectl get pods -n dev -v=9
+```
+```
+gcloud config config-helper --format=json
+```
+```
+kubectx
+```
+```
+kubectl options
+```
+```
+kubectl get pods -n dev -v=7
+```
+```
+kubectl get pods -n dev -v=9
 ```
 
 Hey now we see that we are just hitting an http api

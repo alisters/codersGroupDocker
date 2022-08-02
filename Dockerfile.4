@@ -1,0 +1,8 @@
+FROM gcr.io/distroless/java17-debian11:debug
+COPY  . /app
+WORKDIR /app
+EXPOSE 8080
+RUN /busybox/sh useradd beer
+USER beer
+
+CMD ["target/craftbeer-0.0.1-SNAPSHOT.jar"]
