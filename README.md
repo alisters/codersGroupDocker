@@ -219,7 +219,7 @@ start https://youtu.be/sK5i-N34im8?t=1483
 ```
 ---
 
-  
+
 
 ```
 docker run -it -p 8080:8080/tcp craft-beer
