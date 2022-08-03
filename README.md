@@ -304,6 +304,9 @@ service accounts, namespaces, secrets, .docker secrets to pull images
 Lets have a look at dockerfiles with fresh eyes
 Directives - describing the container to create, which docker translates to an OCI spec so its runtime can run it
 Multi-stage build
+```
+docker build -f .\Dockerfile.6 -t craft-beer6 .
+```
 
 
 # 7 ) Extras
