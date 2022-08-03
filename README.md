@@ -42,7 +42,9 @@ docker build -f .\Dockerfile.1 -t craft-beer1 .
 ```
 docker run --tty --rm --name craft-beer1  craft-beer1
 ```
-Error: -jar requires jar file specification
+*Error: -jar requires jar file specification*  
+Somethings going on here ? we ran java 
+
 ```
 docker inspect craft-beer1
 ```
@@ -75,7 +77,7 @@ Lets browse to this server !
 ``` 
 start http:\\localhost:8080 
 ```
-# Nothing
+*Nothing whats going on ? We've got an expose statement so why can't we browse it*
 ```
 netstat -a | sls LISTENING | sls 8080
 ```
@@ -84,7 +86,6 @@ Hmm, nothing.... so lets start with understanding what we just did
 
 # 2) Images
 
-Somethings going on here we ran java ?
 
 ```
 docker --help
@@ -110,7 +111,7 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_API_V
 
 ok so we've found a shell
 ```
-docker run --name craft-beer-1 -it --entrypoint /busybox/sh craft-beer1
+docker run --name craft-beer-1-sh -it --entrypoint /busybox/sh craft-beer1
 ```
 
 ok so we can override the entry point, so the cmd in the manifest is not what makes the container.....
@@ -132,31 +133,14 @@ start https://docs.docker.com/engine/reference/run/
 ```
 
 ```
-docker run --name craft-beer-1b --pid container:craft-beer-1 -it --entrypoint /busybox/sh craft-beer1
+docker run --name craft-beer-1b --pid container:craft-beer-1-sh -it --entrypoint /busybox/sh craft-beer1
 ```
-
-```
-docker run --name craft-beer-1c -it --entrypoint /busybox/sh craft-beer3
-```
-*docker: Error response from daemon: unable to find user beer: no matching entries in passwd file.*
-
-Hmm, we don't look like we are isolated at all !
-So, where are these running on my machine ?  
-
-```
-docker run --privileged --rm --pid=host -ti ubuntu
-nsenter --target 1 --mount sh
-```
-So we aren't isolated at all
-And this is definitely looks like a linux box
-I'm getting out, and just using this a bit more
-
 Get a shell using k9s
 ```
 cd /proc
 ```
 ```
-cd {somePid}
+cd 1
 ```
 ```
 cd ns
@@ -164,10 +148,77 @@ cd ns
 ```
 ls -la
 ```
-
 Show that the two processes do in fact have the same namespaces in /proc
 
-lsns
+Hmm, we don't look like we are isolated at all !
+So, where are these running on my machine ?  
+
+```
+docker run --privileged --rm --pid=host -ti ubuntu
+```
+```
+ps
+```
+```
+nsenter --target 1 --mount sh
+```
+```
+ps
+```
+So we aren't isolated at all
+And this is definitely looks like a linux box
+I'm getting out, and just using this a bit more
+
+Lets play with the dockerfile and see if we can get a different user namespace
+
+ok - lets take a look at dockerfiles again
+```
+start https://docs.docker.com/engine/reference/builder/
+```
+Investigate why user namespace is still shared
+```
+https://docs.docker.com/engine/reference/commandline/dockerd/
+```
+And now we will try and our docker file
+```
+docker build -f .\Dockerfile.2 -t craft-beer2 .
+```
+```
+docker run --tty --rm --interactive --name craft-beer2  craft-beer2
+```
+```
+docker build -f .\Dockerfile.3 -t craft-beer3 .
+```
+```
+docker run --name craft-beer-1c -it --entrypoint /busybox/sh craft-beer3
+```
+*docker: Error response from daemon: unable to find user beer: no matching entries in passwd file.*
+```
+docker build -f .\Dockerfile.4 -t craft-beer4 .
+```
+```
+docker build -f .\Dockerfile.5 -t craft-beer5 .
+```
+```
+docker run --tty --rm --interactive --name craft-beer1e  craft-beer5
+```
+```
+docker run --name craft-beer-1e -it --entrypoint /busybox/sh craft-beer5
+```
+
+ok - so we got it running as a different user, but we still don't have a seperate user namespace !
+
+And we still can't access the rest endpoint
+
+---
+## Interlude - Video on name spaces and cgroups
+
+```
+start https://youtu.be/sK5i-N34im8?t=116
+start https://youtu.be/sK5i-N34im8?t=1483
+```
+---
+
   
 
 ```
